@@ -24,9 +24,14 @@ module Bondis
         getter = Getter.new
         getter.get_token!
         loop do
-          d = getter.get_track_data(id)
-          @writer.write_records(d['data'])
-          sleep @interval
+          begin
+            d = getter.get_track_data(id)
+            @writer.write_records(d['data'])
+            sleep @interval
+          rescue
+            # refresh token, just in case
+            getter.get_token!
+          end
         end
       end
     end
@@ -34,7 +39,7 @@ module Bondis
 
   class Writer
     def initialize(output_path)
-      @csv = CSV.open(output_path, 'wb')
+      @csv = CSV.open(output_path, 'a')
       @mutex = Mutex.new
     end
 
